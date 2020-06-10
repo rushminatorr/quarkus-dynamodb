@@ -92,7 +92,7 @@ Resources:
             #get() does not store in memory
             try:
                 print("listing s3 objects")
-                bucket = s3.Bucket('rushrush')
+                bucket = s3.Bucket(bucketName)
                 print("found s3 objects")
                 for obj in bucket.objects.all():
                     print(obj)
@@ -116,7 +116,7 @@ Resources:
           
           def write_to_dynamo(rows):
             try:
-                table = dynamodb.Table("consumption_data")
+                table = dynamodb.Table(tableName)
             except:
                 print("Error loading DynamoDB table. Check if table was created correctly and environment variable.")
           
@@ -127,7 +127,7 @@ Resources:
                         item = json.loads(json.dumps(rows[i]))
                         batch.put_item(Item=item) 
             except:
-              print("Error executing batch_writer")
+              print("Error executing batch_writer")        
       Runtime: python3.7
       Timeout: 900
       MemorySize: 3008
