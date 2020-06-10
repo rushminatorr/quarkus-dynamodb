@@ -71,67 +71,62 @@ Resources:
         - Arn
       Code:
         ZipFile: |
-        import json
-        import boto3
-        import os
-        import csv
-        import codecs
-        import sys
-        
-        s3 = boto3.resource('s3')
-        dynamodb = boto3.resource('dynamodb')
-        
-        bucketName = os.environ['bucket']
-        tableName = os.environ['table']
-        
-        def lambda_handler(event, context):
-        
-          batch_size = 100
-          batch = []
-        
-          #get() does not store in memory
-          try:
-              print("listing s3 objects")
-              bucket = s3.Bucket('rushrush')
-              print("found s3 objects")
-              for obj in bucket.objects.all():
-                  print(obj)
-                  #DictReader is a generator; not stored in memory
-                  data = obj.get()['Body']
-                  #DictReader is a generator; not stored in memory
-                  for row in csv.DictReader(codecs.getreader('utf-8')(data)):
-                      if len(batch) >= batch_size:
-                          write_to_dynamo(batch)
-                          batch.clear()
-                      batch.append(row)
-                  if batch:
-                      write_to_dynamo(batch)
-                  try:
-                      print("File processed, will delete it now.")
-                      # s3.obj.delete()
-                  except:
-                      print("Error deleting s3 object.")
-        
-              return {
-              'statusCode': 200,
-              'body': json.dumps('Uploaded to DynamoDB Table')}  
-            
-          except:
-              print("Error Error!! HALP!")
-        
-        def write_to_dynamo(rows):
-          try:
-              table = dynamodb.Table("consumption_data")
-          except:
-              print("Error loading DynamoDB table. Check if table was created correctly and environment variable.")
-        
-          try:
-              with table.batch_writer() as batch:
-                  for i in range(len(rows)):
-                      print("inserting data...")
-                  batch.put_item(Item=json.loads(json.dumps(rows[i]))) 
-          except:
-            print("Error executing batch_writer")
+          import json
+          import boto3
+          import os
+          import csv
+          import codecs
+          import sys
+          
+          s3 = boto3.resource('s3')
+          dynamodb = boto3.resource('dynamodb')
+          
+          bucketName = os.environ['bucket']
+          tableName = os.environ['table']
+          
+          def lambda_handler(event, context):
+          
+            batch_size = 100
+            batch = []
+          
+            #get() does not store in memory
+            try:
+                print("listing s3 objects")
+                bucket = s3.Bucket('rushrush')
+                print("found s3 objects")
+                for obj in bucket.objects.all():
+                    print(obj)
+                    #DictReader is a generator; not stored in memory
+                    data = obj.get()['Body']
+                    #DictReader is a generator; not stored in memory
+                    for row in csv.DictReader(codecs.getreader('utf-8')(data)):
+                        if len(batch) >= batch_size:
+                            write_to_dynamo(batch)
+                            batch.clear()
+                        batch.append(row)
+                    if batch:
+                        write_to_dynamo(batch)
+                    try:
+                        print("File processed, will delete it now.")
+                        # s3.obj.delete()
+                    except:
+                        print("Error deleting s3 object.")      
+            except:
+                print("Error Error!! HALP!")
+          
+          def write_to_dynamo(rows):
+            try:
+                table = dynamodb.Table("consumption_data")
+            except:
+                print("Error loading DynamoDB table. Check if table was created correctly and environment variable.")
+          
+            try:
+                with table.batch_writer() as batch:
+                    for i in range(len(rows)):
+                        print("inserting data...")
+                    batch.put_item(Item=json.loads(json.dumps(rows[i]))) 
+            except:
+              print("Error executing batch_writer")
       Runtime: python3.7
       Timeout: 900
       MemorySize: 3008
