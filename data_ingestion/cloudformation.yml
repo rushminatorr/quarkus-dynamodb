@@ -1,36 +1,38 @@
-AWSTemplateFormatVersion: 2010-09-09
-Metadata: {}
+AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
-  BucketName:
-    Description: Name of the S3 bucket you will deploy the CSV file to
-    Type: String
-    Default: rushtest
-    ConstraintDescription: must be a valid bucket name.
-  FileName:
-    Description: Name of the S3 file (including suffix)
-    Type: String
-    Default: consumption.csv
-    ConstraintDescription: Valid S3 file name.
   DynamoDBTableName:
     Description: Name of the dynamoDB table you will use
     Type: String
-    Default: meter_data
+    Default: consumption_data
     ConstraintDescription: must be a valid dynamoDB name.
-Resources:
-  DynamoDBTable:
-    Type: 'AWS::DynamoDB::Table'
-    Properties:
+  BucketName:
+    Description: Name of the S3 bucket you will deploy the CSV file to
+    Type: String
+    Default: rushrush
+    ConstraintDescription: must be a valid bucket name.
+Resources: 
+  myDynamoDBTable: 
+    Type: AWS::DynamoDB::Table
+    Properties: 
       TableName: !Ref DynamoDBTableName
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: uuid
-          AttributeType: S
-      KeySchema:
-        - AttributeName: uuid
-          KeyType: HASH
-      Tags:
-        - Key: Name
-          Value: !Ref DynamoDBTableName
+      AttributeDefinitions: 
+        - AttributeName: "meter"
+          AttributeType: "S"
+        - AttributeName: "date"
+          AttributeType: "S"
+      KeySchema: 
+        - AttributeName: "meter"
+          KeyType: "HASH"
+        - AttributeName: "date"
+          KeyType: "RANGE"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      AccessControl: BucketOwnerFullControl
   LambdaRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -48,7 +50,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         - 'arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB'
-        - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
       Policies:
         - PolicyName: policyname
           PolicyDocument:
@@ -59,6 +61,7 @@ Resources:
                 Action:
                   - 'dynamodb:PutItem'
                   - 'dynamodb:BatchWriteItem'
+
   CsvToDDBLambdaFunction:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -137,27 +140,26 @@ Resources:
       Environment:
         Variables:
           bucket: !Ref BucketName
-          key: !Ref FileName
           table: !Ref DynamoDBTableName
-  S3Bucket:
-    DependsOn:
-      - CsvToDDBLambdaFunction
-      - BucketPermission
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: !Ref BucketName
-      AccessControl: BucketOwnerFullControl
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Event: 's3:ObjectCreated:*'
-            Function: !GetAtt 
-              - CsvToDDBLambdaFunction
-              - Arn
-  BucketPermission:
-    Type: 'AWS::Lambda::Permission'
-    Properties:
-      Action: 'lambda:InvokeFunction'
-      FunctionName: !Ref CsvToDDBLambdaFunction
-      Principal: s3.amazonaws.com
-      SourceAccount: !Ref 'AWS::AccountId'
+  ScheduledRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "ScheduledRule"
+      ScheduleExpression: "cron(0 6,19 * * ? *)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - "CsvToDDBLambdaFunction"
+              - "Arn"
+          Id: "CsvToDDBLambdaFunction"
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !GetAtt CsvToDDBLambdaFunction.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt ScheduledRule.Arn
 Outputs: {}
+        
