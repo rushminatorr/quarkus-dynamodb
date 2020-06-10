@@ -108,7 +108,7 @@ Resources:
                         write_to_dynamo(batch)
                     try:
                         print("File processed, will delete it now.")
-                        # s3.obj.delete()
+                        obj.delete()
                     except:
                         print("Error deleting s3 object.")      
             except:
