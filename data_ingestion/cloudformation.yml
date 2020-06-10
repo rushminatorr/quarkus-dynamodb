@@ -16,14 +16,14 @@ Resources:
     Properties: 
       TableName: !Ref DynamoDBTableName
       AttributeDefinitions: 
-        - AttributeName: "meter"
+        - AttributeName: "Meter"
           AttributeType: "S"
-        - AttributeName: "date"
+        - AttributeName: "Date"
           AttributeType: "S"
       KeySchema: 
-        - AttributeName: "meter"
+        - AttributeName: "Meter"
           KeyType: "HASH"
-        - AttributeName: "date"
+        - AttributeName: "Date"
           KeyType: "RANGE"
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"
