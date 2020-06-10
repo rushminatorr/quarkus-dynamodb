@@ -35,7 +35,7 @@ You can then execute your native executable with: `./target/energy_consumption-1
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image.
 
 ## Deployment 
-Provided your docker image is pushed to ECR, you can run the cloud formation template to spinup an ECS cluster and loadbalancer for your service.
+Provided your docker image is pushed to ECR, you can run the cloud formation template to spinup an ECS cluster(Fargate) and loadbalancer for your service.
 
 Template  Variable  |  Description
 ------------------- |  -------------
@@ -50,7 +50,8 @@ DesiredCount        |  Count of service task to run
 ![AWS Components](docs/template.png)
     
 ##### Command:
-
+    
+    cd aws_resources
     aws cloudformation deploy \
     --capabilities CAPABILITY_NAMED_IAM \
     --template-file cloudformation.yml \
@@ -86,4 +87,4 @@ The stack will create an ECS cluster with your application service, some network
 - telemetry 
 - Refine Security (network, application, IAM roles)
 - get quarkus image working(trouble with graavlm native-image installation)
-
+- immutable infrastructure [stack deletes are buggy]
