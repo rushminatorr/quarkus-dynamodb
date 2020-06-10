@@ -124,7 +124,8 @@ Resources:
                 with table.batch_writer() as batch:
                     for i in range(len(rows)):
                         print("inserting data...")
-                    batch.put_item(Item=json.loads(json.dumps(rows[i]))) 
+                        item = json.loads(json.dumps(rows[i]))
+                        batch.put_item(Item=item) 
             except:
               print("Error executing batch_writer")
       Runtime: python3.7
