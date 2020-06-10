@@ -11,9 +11,6 @@ Template  Variable  |  Description
 ------------------- |  -------------
 DynamoDBTableName   |  Name for your Dynamodb table
 BucketName          |  Name to assign to your S3 bucket
-
-    
-![AWS Components](docs/template.png)
     
 ##### Command:
 
@@ -25,12 +22,13 @@ BucketName          |  Name to assign to your S3 bucket
 ### Assumptions
 - Lambda is triggered twice a day(6am, 7pm), and it should process all new files.
 - Delete csv files after processing
+- only certain formatted csv's will be uploaded to the s3 bucket
 
 ### ToDo
 - build pipeline
 - perhaps send processed items to cold storage 
 - design document/ADRs
-- telemetry 
+- telemetry / alerting
 - Refine Security (IAM roles)
 - immutable infrastructure (check)
-- add test
+- add test (stress test)
